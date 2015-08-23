@@ -1,0 +1,45 @@
+---
+title: 'Statistical Interference Course Project Part 2: Basic inferential data analysis'
+author: "Yisong Tao"
+date: "August 22, 2015"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+In this part of the project, we analyze the `ToothGrowth` data in the R datasets package. The data is set of 60 observations, length of odontoblasts (teeth) in each of 10 guinea pigs at each of three dose levels of Vitamin C (0.5, 1 and 2 mg) with each of two delivery methods (orange juice or vitamin C pills).
+
+```{r load_data}
+library(datasets)
+data("ToothGrowth")
+str(ToothGrowth)
+head(ToothGrowth)
+summary(ToothGrowth)
+```
+
+```{r}
+library(ggplot2)
+ggplot(data=ToothGrowth, aes(x=as.factor(dose), y=len, fill=supp)) +
+    geom_bar(stat="identity",) +
+    facet_grid(. ~ supp) +
+    xlab("Dose in miligrams") +
+    ylab("Tooth length") +
+    guides(fill=guide_legend(title="Supplement type"))
+```
+
+Clearly there is a positive correlation between tooth length and vitamin C dose for both delievery methods. We are going to use regression analysis to quantify their relationship below.
+
+```{r regression_model}
+fit <- lm(len ~ dose + supp, data=ToothGrowth)
+summary(fit)
+```
+
+The intercept is `r fit$coefficients[[1]]`, meaning that with no supplement of Vitamin C, the average tooth length is `r fit$coefficients[[1]]` units. The coefficient of dose is `r fit$coefficients[[2]]`. It means that by increasing the delievered dose 1 mg, all else equal (i.e. no change in the supplement type), would increase the tooth length by `r fit$coefficients[[2]]` units. The last coefficient is for the supplement type. Since the supplement type is a categorical variable, dummy variables are used. The computed coefficient is for suppVC and the value is `r fit$coefficients[[3]]` meaning that delivering a given dose as vitamin c pills, without changing the dose, would result in `r abs(fit$coefficients[[3]])` units of decrease in theincrease of  tooth length. 
+
+The 95% confidence intervals are as following:
+
+```{r}
+confint(fit)
+```
+
+The 95% confident intervals tell us that based on our data and analysis, there is a 95% probability that any new data under the same experimental condition will give us the estimates in the intervals above. The null hypothesis is that the coefficients are 0, which means the variables have no effects on tooth length. All p values in our case are less than 0.05, resulting in rejection of null hypotheses and all 3 variables in our regression model are significant in explaining tooth growth under the experimental conditions, assuming the significance level is 5%.
